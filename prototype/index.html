@@ -27,9 +27,17 @@
             <!-- タスク入力エリア -->
             <section class="input-section">
                 <form id="task-form">
-                    <input type="text" id="task-input" placeholder="頭の中のタスクをすべて吐き出そう..." autocomplete="off">
+                    <input type="text" id="task-input" placeholder="例：明日までに〇〇を提出する" autocomplete="off">
                     <button type="submit" class="btn add-btn">+</button>
                 </form>
+                <div class="input-hints">
+                    <p class="hint-text">💡 短い文章でOK！「今日」「至急」などを入れるとAIが優先度を判定しやすくなります。</p>
+                    <div class="quick-adds">
+                        <button type="button" class="quick-tag">今日中にメール返信</button>
+                        <button type="button" class="quick-tag">至急電話する</button>
+                        <button type="button" class="quick-tag">明日までに資料作成</button>
+                    </div>
+                </div>
             </section>
 
             <!-- アクションエリア -->

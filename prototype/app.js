@@ -25,6 +25,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Quick add tags
+    document.querySelectorAll('.quick-tag').forEach(tag => {
+        tag.addEventListener('click', (e) => {
+            const content = e.target.textContent;
+            addTask(content);
+        });
+    });
+
     aiSortBtn.addEventListener('click', organizeWithAI);
 
     completePrimaryBtn.addEventListener('click', () => {
