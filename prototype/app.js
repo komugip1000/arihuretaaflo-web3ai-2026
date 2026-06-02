@@ -45,10 +45,37 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Functions
+    function parseTask(rawContent) {
+        let summary = rawContent;
+        let deadline = '';
+        
+        // 簡単な期限キーワードの抽出モック
+        const timeKeywords = ["今日中", "今日", "明日まで", "明日", "今週中", "来週", "至急"];
+        for (const kw of timeKeywords) {
+            if (summary.includes(kw)) {
+                deadline = kw;
+                // キーワード部分などを削除して要約
+                summary = summary.replace(kw, '').replace(/に|までに/g, '').trim();
+                break;
+            }
+        }
+        
+        // 長い場合は「要約」として切り詰める
+        if (summary.length > 15) {
+            summary = summary.substring(0, 15) + '...';
+        }
+        if (!summary) summary = "タスク";
+
+        return { summary, deadline };
+    }
+
     function addTask(content) {
+        const { summary, deadline } = parseTask(content);
         const newTask = {
             id: Date.now().toString(),
-            content: content,
+            rawContent: content, // AI判定用
+            summary: summary,    // UI表示用
+            deadline: deadline,  // UI表示用
             createdAt: new Date()
         };
         tasks.push(newTask);
@@ -82,8 +109,17 @@ document.addEventListener('DOMContentLoaded', () => {
         tasks.forEach(task => {
             const li = document.createElement('li');
             li.className = 'task-item';
+            
+            let deadlineHtml = '';
+            if (task.deadline) {
+                deadlineHtml = `<span class="deadline-badge">⏰ ${escapeHTML(task.deadline)}</span>`;
+            }
+
             li.innerHTML = `
-                <span class="task-content">${escapeHTML(task.content)}</span>
+                <div class="task-content">
+                    <div class="task-summary">${escapeHTML(task.summary)}</div>
+                    ${deadlineHtml}
+                </div>
                 <button class="delete-btn" data-id="${task.id}" aria-label="削除">×</button>
             `;
             taskList.appendChild(li);
@@ -113,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // 優先度スコアを計算するモック機能
             tasks.forEach(task => {
                 let score = 0;
-                const text = task.content;
+                const text = task.rawContent;
 
                 // 1. 緊急度キーワード
                 if (/至急|すぐ|今日|本日|締切|期限/.test(text)) score += 100;
@@ -139,7 +175,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // 1番優先すべきタスクを抽出して表示
             if (tasks.length > 0) {
                 const primary = tasks[0];
-                primaryTaskDisplay.textContent = primary.content;
+                let primaryHtml = `<div>${escapeHTML(primary.summary)}</div>`;
+                if(primary.deadline) {
+                    primaryHtml += `<div class="deadline-badge primary-badge">⏰ ${escapeHTML(primary.deadline)}</div>`;
+                }
+                primaryTaskDisplay.innerHTML = primaryHtml;
                 focusArea.classList.remove('hidden');
                 
                 // リストも更新

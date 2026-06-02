@@ -336,3 +336,36 @@ header h1 {
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
+/* 期限バッジと要約 */
+.task-content {
+    flex-grow: 1;
+    margin-right: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    align-items: flex-start;
+}
+
+.task-summary {
+    font-weight: 500;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.deadline-badge {
+    display: inline-block;
+    background: rgba(255, 118, 117, 0.15);
+    color: var(--danger);
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-weight: 700;
+}
+
+.primary-badge {
+    margin-top: 1rem;
+    font-size: 1rem;
+    padding: 0.4rem 1rem;
+}
+
+
