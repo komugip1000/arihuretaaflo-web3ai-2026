@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const focusArea = document.getElementById('focus-area');
     const primaryTaskDisplay = document.getElementById('primary-task');
     const completePrimaryBtn = document.getElementById('complete-primary-btn');
+    const celebrationToast = document.getElementById('celebration-toast');
 
     // State
     let tasks = [];
@@ -41,13 +42,23 @@ document.addEventListener('DOMContentLoaded', () => {
             tasks.shift();
             focusArea.classList.add('hidden');
             updateUI();
+            showCelebration();
         }
     });
 
     // Functions
+    function showCelebration() {
+        celebrationToast.classList.add('show');
+        setTimeout(() => {
+            celebrationToast.classList.remove('show');
+        }, 3000);
+    }
+
     function parseTask(rawContent) {
         let summary = rawContent;
         let deadline = '';
+        let estimatedTime = '';
+        let advice = '';
         
         // 簡単な期限キーワードの抽出モック
         const timeKeywords = ["今日中", "今日", "明日まで", "明日", "今週中", "来週", "至急"];
@@ -60,22 +71,40 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
+        // 2. 所要時間の見積もり
+        if (/電話|連絡|メール|返信|確認|ちょっと/.test(rawContent)) {
+            estimatedTime = '約5分';
+        } else if (/調べる|検索|読む|チェック/.test(rawContent)) {
+            estimatedTime = '約15分';
+        } else if (/作成|企画|まとめる|レポート|資料/.test(rawContent)) {
+            estimatedTime = '約30分〜';
+        }
+
+        // 3. 抽象的タスクへのアドバイス
+        if (summary.length < 4 && /考える|企画|やる|する/.test(rawContent)) {
+            advice = '💡 少し大きすぎるかも？「まずは10分だけ参考資料を探す」など、最初の1歩に分解してみましょう。';
+        } else if (/検討|準備/.test(rawContent)) {
+            advice = '💡 具体的に「誰に」「何を」するか書き出すと、もっと動きやすくなりますよ。';
+        }
+
         // 長い場合は「要約」として切り詰める
         if (summary.length > 15) {
             summary = summary.substring(0, 15) + '...';
         }
         if (!summary) summary = "タスク";
 
-        return { summary, deadline };
+        return { summary, deadline, estimatedTime, advice };
     }
 
     function addTask(content) {
-        const { summary, deadline } = parseTask(content);
+        const { summary, deadline, estimatedTime, advice } = parseTask(content);
         const newTask = {
             id: Date.now().toString(),
             rawContent: content, // AI判定用
             summary: summary,    // UI表示用
             deadline: deadline,  // UI表示用
+            estimatedTime: estimatedTime,
+            advice: advice,
             createdAt: new Date()
         };
         tasks.push(newTask);
@@ -110,15 +139,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const li = document.createElement('li');
             li.className = 'task-item';
             
-            let deadlineHtml = '';
+            let badgesHtml = '';
             if (task.deadline) {
-                deadlineHtml = `<span class="deadline-badge">⏰ ${escapeHTML(task.deadline)}</span>`;
+                badgesHtml += `<span class="deadline-badge">⏰ ${escapeHTML(task.deadline)}</span>`;
+            }
+            if (task.estimatedTime) {
+                badgesHtml += `<span class="time-badge">⏱️ ${escapeHTML(task.estimatedTime)}</span>`;
+            }
+            
+            let adviceHtml = '';
+            if (task.advice) {
+                adviceHtml = `<div class="advice-text">${escapeHTML(task.advice)}</div>`;
             }
 
             li.innerHTML = `
                 <div class="task-content">
                     <div class="task-summary">${escapeHTML(task.summary)}</div>
-                    ${deadlineHtml}
+                    ${badgesHtml ? `<div class="badges-container">${badgesHtml}</div>` : ''}
+                    ${adviceHtml}
                 </div>
                 <button class="delete-btn" data-id="${task.id}" aria-label="削除">×</button>
             `;
@@ -176,9 +214,22 @@ document.addEventListener('DOMContentLoaded', () => {
             if (tasks.length > 0) {
                 const primary = tasks[0];
                 let primaryHtml = `<div>${escapeHTML(primary.summary)}</div>`;
+                
+                let badgesHtml = '';
                 if(primary.deadline) {
-                    primaryHtml += `<div class="deadline-badge primary-badge">⏰ ${escapeHTML(primary.deadline)}</div>`;
+                    badgesHtml += `<span class="deadline-badge primary-badge">⏰ ${escapeHTML(primary.deadline)}</span>`;
                 }
+                if(primary.estimatedTime) {
+                    badgesHtml += `<span class="time-badge primary-badge">⏱️ ${escapeHTML(primary.estimatedTime)}</span>`;
+                }
+                if (badgesHtml) {
+                    primaryHtml += `<div class="badges-container" style="justify-content: center;">${badgesHtml}</div>`;
+                }
+                
+                if(primary.advice) {
+                    primaryHtml += `<div class="advice-text" style="text-align: left;">${escapeHTML(primary.advice)}</div>`;
+                }
+                
                 primaryTaskDisplay.innerHTML = primaryHtml;
                 focusArea.classList.remove('hidden');
                 
